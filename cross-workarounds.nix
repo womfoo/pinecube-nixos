@@ -13,6 +13,9 @@ let
     # Ensure pkgsBuildBuild ends up unmodified, otherwise the canary test will
     # get super expensive to build.
     if super.stdenv.buildPlatform == super.stdenv.hostPlatform then {} else {
+    cairo = super.cairo.override { glSupport = false; };
+    gnutls = super.gnutls.override { guileBindings = false; };
+    libass = super.libass.override { encaSupport = false; };
     # Works around libselinux failure with python on armv7l.
     # LONG_BIT definition appears wrong for platform
     libselinux = (super.libselinux
@@ -23,13 +26,29 @@ let
         preInstall = ":";
       })
     ;
+    polkit = super.polkit.override { withIntrospection = false; };
   };
 in
 lib.mkIf isCross
 {
+  # disable more stuff to minimize cross-compilation
+  # some from: https://github.com/illegalprime/nixos-on-arm/blob/master/images/mini/default.nix
+
+  boot.enableContainers = false;
+
+  documentation.info.enable = false;
+
+  documentation.man.enable = false;
+
+  environment.noXlibs = true;
+
   # building '/nix/store/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee-fc-cache.drv'...
   # [...]-fontconfig-2.10.2-aarch64-unknown-linux-gnu-bin/bin/fc-cache: cannot execute binary file: Exec format error
   fonts.fontconfig.enable = false;
+
+  programs.command-not-found.enable = false;
+
+  security.audit.enable = false;
 
   # building '/nix/store/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee-mesa-19.3.3-aarch64-unknown-linux-gnu.drv'...
   # meson.build:1537:2: ERROR: Dependency "wayland-scanner" not found, tried pkgconfig

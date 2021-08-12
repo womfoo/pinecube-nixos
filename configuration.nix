@@ -1,5 +1,4 @@
-{ config, lib, pkgs, ... }:
-
+{ config, pkgs, ... }:
 {
   boot.loader.grub.enable = false;
   boot.loader.generic-extlinux-compatible.enable = true;
@@ -9,7 +8,9 @@
   boot.kernelParams = [ "console=ttyS0,115200n8" "cma=32M" ];
 
   # See: https://lore.kernel.org/patchwork/project/lkml/list/?submitter=22013&order=name
-  boot.kernelPackages = pkgs.linuxPackages_5_9;
+
+  # boot.kernelPackages = (pkgs.callPackage ./kernel/linux-5.9.nix).linuxPackages_5_9;
+  boot.kernelPackages = pkgs.linuxPackages_pinecube_5_9;
   boot.kernelPatches = [
     { name = "pine64-pinecube";
       patch = ./kernel/Pine64-PineCube-support.patch;
@@ -50,8 +51,34 @@
     extraGroups = [ "wheel" "networkmanager" "video" ];
     initialPassword = "nixos";
   };
-  services.mingetty.autologinUser = "nixos";
+  services.getty.autologinUser = "nixos";
 
   networking.wireless.enable = true;
 
+  security.polkit.enable = false;
+  services.udisks2.enable = false;
+
+  nixpkgs.overlays =  [
+    # spidermonkey is broken
+    (self: super: {
+      wpa_supplicant = super.wpa_supplicant.override (o: { withPcsclite = false;});
+    })
+    (self: super:
+      let
+        inherit (super) callPackage kernelPatches;
+        linuxPackagesFor' = kernel: (pkgs.linuxPackagesFor kernel).extend (_: ksuper: {
+          rtl8189es = pkgs.callPackage ./kernel/rtl8189es.nix { kernel = ksuper.kernel; };
+        });
+      in
+        {
+          linux_pinecube_5_9 = callPackage ./kernel/default.nix {
+            kernelPatches = [
+              kernelPatches.bridge_stp_helper
+              kernelPatches.modinst_arg_list_too_long
+            ];
+          };
+          linuxPackages_pinecube_5_9 = linuxPackagesFor' self.linux_pinecube_5_9;
+        }
+    )
+  ];
 }

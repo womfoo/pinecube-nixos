@@ -4,10 +4,10 @@ let
   uboot = pkgs.callPackage ./uboot {};
 in
 {
-  imports = [ 
+  imports = [
     <nixpkgs/nixos/modules/installer/cd-dvd/sd-image.nix>
     ./configuration.nix
-    ./cross-config.nix
+    ./cross-workarounds.nix
   ];
 
   sdImage.populateFirmwareCommands = "";
