@@ -75,7 +75,8 @@
             kernelPatches = [
               kernelPatches.bridge_stp_helper
               kernelPatches.request_key_helper
-              kernelPatches.export_kernel_fpu_functions."5.3"
+              # FIXME: check what this is, no longer in unstable
+              #kernelPatches.export_kernel_fpu_functions."5.3"
             ];
           };
           linuxPackages_pinecube_5_9 = linuxPackagesFor' self.linux_pinecube_5_9;
