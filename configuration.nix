@@ -74,7 +74,8 @@
           linux_pinecube_5_9 = callPackage ./kernel/default.nix {
             kernelPatches = [
               kernelPatches.bridge_stp_helper
-              kernelPatches.modinst_arg_list_too_long
+              kernelPatches.request_key_helper
+              kernelPatches.export_kernel_fpu_functions."5.3"
             ];
           };
           linuxPackages_pinecube_5_9 = linuxPackagesFor' self.linux_pinecube_5_9;
